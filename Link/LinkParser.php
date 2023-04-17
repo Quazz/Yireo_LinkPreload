@@ -37,6 +37,11 @@ class LinkParser
     private $assetRepository;
 
     /**
+     * @var Crawler
+     */
+    private $crawler;
+
+    /**
      * @var Link[]
      */
     private $links = [];
@@ -46,17 +51,20 @@ class LinkParser
      * @param StoreManagerInterface $storeManager
      * @param LayoutInterface $layout
      * @param Repository $assetRepository
+     * @param Crawler $crawler
      */
     public function __construct(
         Config $config,
         StoreManagerInterface $storeManager,
         LayoutInterface $layout,
-        Repository $assetRepository
+        Repository $assetRepository,
+        Crawler $crawler
     ) {
         $this->config = $config;
         $this->storeManager = $storeManager;
         $this->layout = $layout;
         $this->assetRepository = $assetRepository;
+        $this->crawler = $crawler;
     }
 
     /**
@@ -140,15 +148,15 @@ class LinkParser
      */
     private function addLinkHeadersFromResponse(HttpResponse $response)
     {
-        $crawler = new Crawler((string)$response->getContent());
+        $this->crawler->add((string)$response->getContent());
 
         if (!$this->config->isCriticalEnabled()) {
-            $this->addStylesheetsAsLinkHeader($crawler->filter('link[rel="stylesheet"]'));
+            $this->addStylesheetsAsLinkHeader($this->crawler->filter('link[rel="stylesheet"]'));
         }
-        $this->addScriptsAsLinkHeader($crawler->filter('script[type="text/javascript"][src]'));
+        $this->addScriptsAsLinkHeader($this->crawler->filter('script[type="text/javascript"][src]'));
 
         if ($this->config->skipImages() === false) {
-            $this->addImagesAsLinkHeader($crawler->filter('img[src]'));
+            $this->addImagesAsLinkHeader($this->crawler->filter('img[src]'));
         }
     }
 
